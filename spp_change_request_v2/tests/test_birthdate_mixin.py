@@ -26,12 +26,8 @@ class TestBirthdateMixin(TransactionCase):
         super().setUpClass()
         cls.Partner = cls.env["res.partner"]
         cls.CR = cls.env["spp.change.request"]
-        cls.individual = cls.Partner.create(
-            {"name": "Mixin Subject", "is_registrant": True, "is_group": False}
-        )
-        cls.group = cls.Partner.create(
-            {"name": "Mixin Household", "is_registrant": True, "is_group": True}
-        )
+        cls.individual = cls.Partner.create({"name": "Mixin Subject", "is_registrant": True, "is_group": False})
+        cls.group = cls.Partner.create({"name": "Mixin Household", "is_registrant": True, "is_group": True})
 
     def setUp(self):
         super().setUp()
