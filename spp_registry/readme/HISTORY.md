@@ -1,6 +1,7 @@
-### 19.0.2.1.5
+### 19.0.2.2.3
 
-- fix(registry): reject future dates of birth on every write path. `_birthdate_onchange` only guards the form UI, so ORM `create`/`write`, CSV/Excel import, and API writes (XML-RPC, API v2, DCI) could persist a future `birthdate` — which the non-stored `age` compute then rendered as a negative string. A stored-field `@api.constrains("birthdate")` (`_check_birthdate_not_future`) now enforces this server-side; the onchange is kept as the friendlier silent-reset UX in the form (#362)
+- fix(registry): repair the stored `status`/`is_ended` computes on `spp.group.membership` once the clock crosses `ended_date`. Both fields depend only on `ended_date` compared against *now*, so a future-dated departure never took effect once the clock crossed it — rosters, metrics, API search and downstream gates kept treating the member as active indefinitely. Writing a future `ended_date` now schedules a lightweight, index-served repair cron in the minute after that moment (staleness window ≈1–2 minutes), and a daily sweep self-heals everything else: rows already stale in existing databases (drained in committed batches, resuming across runs until the backlog is gone) and rows written behind the ORM, including `is_ended = NULL` rows that raw-SQL consumers treated as ended (#417)
+- upgrade note: this version adds a partial index on `spp_group_membership.ended_date`, built with a write-blocking `CREATE INDEX` during the module upgrade. On a very large registry, pre-create it concurrently before upgrading and the upgrade will skip the build: `CREATE INDEX CONCURRENTLY IF NOT EXISTS spp_group_membership__ended_date_index ON spp_group_membership (ended_date) WHERE ended_date IS NOT NULL;`
 
 ### 19.0.2.2.2
 
